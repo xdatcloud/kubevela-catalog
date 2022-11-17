@@ -1,0 +1,81 @@
+---
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: vector-playground
+  namespace: default
+spec:
+  components:
+    - name: demo-source-config
+      type: vector-log2metric
+      properties:
+        source: demo
+        demoLogs:
+          - '{"pet": "dog"}'
+          - '{"pet": "dog"}'
+          - '{"pet": "cat"}'
+          - '{"pet": "parrot"}'
+        demoIntervalSecs: 0.1
+        parseMode: json
+        streams:
+          - metrics:
+              - name: pet_count
+                agg: count
+            groupBy:
+              - parsed.pet
+            job: pet_stat
+            tags:
+              pet: "{{ parsed.pet }}"
+              instance: "${VECTOR_SELF_POD_NAME}"
+              namespace: "${VECTOR_SELF_POD_NAMESPACE}"
+            namespace: playground
+            windowSecs: 10
+            debug: true
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: vector-playground
+  namespace: default
+spec:
+  containers:
+    - name: vector
+      image: "docker.io/xdatcloud/vector:0.25.1_6ea40ddc6_20221116"
+      imagePullPolicy: IfNotPresent
+      args:
+        - -w
+        - --config-dir
+        - /etc/vector/
+      env:
+        - name: VECTOR_SELF_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: VECTOR_SELF_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: VECTOR_SELF_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+      volumeMounts:
+        - name: data
+          mountPath: "/var/lib/vector"
+        - name: tmp
+          mountPath: "/tmp"
+          readOnly: true
+        - name: config
+          mountPath: "/etc/vector/"
+          readOnly: true
+  terminationGracePeriodSeconds: 60
+  volumes:
+    - name: config
+      projected:
+        sources:
+          - configMap:
+              name: demo-source-config
+    - name: data
+      emptyDir: {}
+    - name: tmp
+      emptyDir: {}

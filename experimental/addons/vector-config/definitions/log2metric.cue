@@ -7,7 +7,7 @@ import ("strings")
 
 template: {
 	#parameter: {
-		source: "file" | "pod"
+		source: "file" | "pod" | "demo"
 		if source == "file" {
 			files: [...string]
 			readFrom: *"end" | "beginning"
@@ -15,6 +15,12 @@ template: {
 		if source == "pod" {
 			podLabelSelector?: string
 			podFieldSelector?: string
+		}
+		if source == "demo" {
+			demoLogs: [...string]
+			demoInSequence:   *false | true
+			demoIntervalSecs: *1.0 | number
+			demoTotalCount?:  int
 		}
 
 		targetConfigMapName:      *"vector" | string
@@ -92,6 +98,18 @@ template: {
 					}
 					if _params.podLabelSelector != _|_ {
 						extra_field_selector: _params.podFieldSelector
+					}
+				}
+			}
+			if _params.source == "demo" {
+				def: {
+					type:     "demo_logs"
+					format:   "shuffle"
+					lines:    _params.demoLogs
+					interval: _params.demoIntervalSecs
+					sequence: _params.demoInSequence
+					if _params.demoTotalCount != _|_ {
+						count: _params.demoTotalCount
 					}
 				}
 			}
@@ -355,7 +373,7 @@ if is_null(.\(metric.field)) {
 					namespace: _params.targetConfigMapNamespace
 				}
 			}
-			if _params.source == "file" {
+			if _params.source == "file" || _params.source == "demo" {
 				role: "sidecar"
 			}
 			vectorConfig: {
