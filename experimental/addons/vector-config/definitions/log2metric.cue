@@ -10,6 +10,7 @@ template: {
 		source: "file" | "pod" | "demo"
 		if source == "file" {
 			files: [...string]
+			ignoreCheckpoints: *false | true
 			readFrom: *"end" | "beginning"
 		}
 		if source == "pod" {
@@ -88,6 +89,7 @@ template: {
 					type:      "file"
 					include:   _params.files
 					read_from: _params.readFrom
+					ignore_checkpoints: _params.ignoreCheckpoints
 				}
 			}
 			if _params.source == "pod" {
