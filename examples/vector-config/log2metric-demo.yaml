@@ -6,7 +6,7 @@ metadata:
   namespace: default
 spec:
   components:
-    - name: demo-source-config
+    - name: demo-config
       type: vector-log2metric
       properties:
         source: demo
@@ -74,7 +74,7 @@ spec:
       projected:
         sources:
           - configMap:
-              name: demo-source-config
+              name: demo-config
     - name: data
       emptyDir: {}
     - name: tmp

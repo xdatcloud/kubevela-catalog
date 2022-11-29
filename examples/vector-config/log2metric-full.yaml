@@ -1,0 +1,70 @@
+apiVersion: core.oam.dev/v1beta1
+kind: Application
+metadata:
+  name: of-your-application
+  namespace: of-your-vector
+spec:
+  components:
+    - name: of-your-log2metric-config
+      # Type must chose "vector-log2metric"
+      type: vector-log2metric
+      properties:
+        # Enums of source: "file" | "pod" | "demo"
+        # - "file": collect logs from some files on disk
+        # - "pod": collect logs from stdout from pod, should deploy vector as daemon-set
+        # - "demo": generate some fake data to test or debug
+        source: demo
+        # Defines some fake data to test or debug
+        # Related to `source: "demo"`
+        demoLogs:
+          - '{"pet": "dog"}'
+          - '{"pet": "dog"}'
+          - '{"pet": "cat"}'
+          - '{"pet": "parrot"}'
+        demoIntervalSecs: 0.1
+        parseMode: json
+        streams:
+          - metrics:
+              - name: pet_count
+                agg: count
+            groupBy:
+              - parsed.pet
+            job: pet_stat
+            tags:
+              pet: "{{ parsed.pet }}"
+              instance: "${VECTOR_SELF_POD_NAME}"
+              namespace: "${VECTOR_SELF_POD_NAMESPACE}"
+            namespace: playground
+            windowSecs: 10
+            debug: true
+
+
+
+#        demoLogs:
+#          - '{"pet": "dog"}'
+#          - '{"pet": "dog"}'
+#          - '{"pet": "cat"}'
+#          - '{"pet": "parrot"}'
+#        files:
+#          - /path/to/file.log
+#        parseMode: json
+#        # parseDebug: true # Uncomment this line to print structure of parsed event to stdout
+#        # internalMetrics: true # Uncomment this line to scrape internal metrics periodically
+#        streams:
+#          - metrics:
+#              - name: request_count
+#                agg: count
+#            groupBy:
+#              - parsed.service
+#              - parsed.status
+#              - parsed.url
+#            job: gateway_monitor
+#            tags:
+#              pod: "{{ kubernetes.pod_name }}"
+#              service: "{{ parsed.service }}"
+#              status: "{{ parsed.url }}"
+#              url: "{{ parsed.url }}"
+#            namespace: gateway
+#            windowSecs: 60
+#            # debug: true # Uncomment this line to print aggregated metrics to stdout
+#        metricExporter: 9888

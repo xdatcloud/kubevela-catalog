@@ -1,6 +1,8 @@
 name: vector-config
-version: v0.1.0
-description: Vector is a lightweight, ultra-fast tool for building observability pipelines.
+version: v0.2.0
+description: |
+  Vector is a lightweight, ultra-fast tool for building observability pipelines.
+  This addon provides a set of components/traits to simplify the usage of vector.
 url: https://vector.dev/
 
 tags:
